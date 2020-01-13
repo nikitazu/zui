@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - UI syntax macro.
 - View model with changes notification.
 - Documentation: simple example of `zui` macro usage.
+- Build scripts: doc/build.cmd - builds documentation.
 
 ### Changed
 - Nothing.

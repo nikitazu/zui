@@ -1,7 +1,14 @@
+# Editor temp files
 *~
 *.bak
 \#*
 .\#*
 .DS_Store
+
+# Racket compiled sources
 compiled/
-/doc/
+
+# Documentation
+/doc/*
+# but not documentation build script
+!/doc/build.cmd
