@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.2-alpha] - 2020-01-31
+
 ### Added
 - UI syntax macro.
 - #:id keyword for UI syntax.

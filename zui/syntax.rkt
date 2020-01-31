@@ -8,12 +8,12 @@
 ;;;;
 
 (provide zui
-         sr:current-ui-element
-         sr:current-ui-element-table
-         sr:current-ui-element-model
-         sr:get-ui-element
-         sr:get-ui-element*
-         sr:get-ui-model)
+         (rename-out [sr:current-ui-element zui:current-ui-element]
+                     [sr:current-ui-element-table zui:current-ui-element-table]
+                     [sr:current-ui-element-model zui:current-ui-element-model]
+                     [sr:get-ui-element zui:get-ui-element]
+                     [sr:get-ui-element* zui:get-ui-element*]
+                     [sr:get-ui-model zui:get-ui-model]))
 
 (define-syntax zui
   (syntax-rules (zui)
