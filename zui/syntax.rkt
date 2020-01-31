@@ -182,7 +182,7 @@
                              (zui vertical-pane% ([#:bind-body 'get-items]
                                                   [stretchable-height #f])
                                   (for ([item (send (get-ui-model) get-items)])
-                                    (zui message% ([label (format "ITER test ~a" item)]
+                                    (zui message% ([label (format "BIND-BODY test ~a" item)]
                                                    [font my-font]
                                                    [auto-resize #t]))))
 
