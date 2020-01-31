@@ -1,21 +1,18 @@
 #lang racket
 
-(require syntax/parse)
-(require (prefix-in nc: "notify-changes.rkt"))
+(require syntax/parse
+         (prefix-in nc: "notify-changes.rkt")
+         (prefix-in sr: "syntax/runtime.rkt"))
 
 ;;;; ZUI - Zuev's UI syntax extensions
 ;;;;
 
-(provide current-ui-element
-         current-ui-element-table
-         current-ui-element-model
-         zui
-         get-ui-element
-         get-ui-model)
-
-(define current-ui-element (make-parameter #f))
-(define current-ui-element-table (make-parameter #f))
-(define current-ui-element-model (make-parameter #f))
+(provide zui
+         sr:current-ui-element
+         sr:current-ui-element-table
+         sr:current-ui-element-model
+         sr:get-ui-element
+         sr:get-ui-model)
 
 (define-syntax zui
   (syntax-rules (zui)
@@ -29,7 +26,7 @@
     ;
     [(zui class-id ([#:id id:expr] kv ...) body-expr ...)
      (zui class-id (kv ...)
-          (set-current-ui-element id:expr)
+          (sr:set-current-ui-element id:expr)
           body-expr ...)]
     ;
     ; with body - #:bind-in keyword argument (with convert)
@@ -47,7 +44,7 @@
      (zui class-id (kv ...)
           (bind-current-ui-element-to-model/in bind-in:expr-from
                                                bind-in:expr-to
-                                               (λ (x) x))
+                                               values)
           body-expr ...)]
     ;
     ; with body - #:bind-body keyword argument
@@ -63,24 +60,11 @@
      (zui-create-ui-element class-id ([key value] ...) body-expr ...)]))
 
 
-(define (get-ui-element id)
-  (hash-ref (current-ui-element-table)
-            id))
-
-(define (get-ui-model)
-  (current-ui-element-model))
-
-(define (set-current-ui-element id)
-  (hash-set! (current-ui-element-table)
-             id
-             (current-ui-element)))
-
-
 (define (bind-current-ui-element-to-model/in model-getter-id
                                              element-setter-id
                                              convert-func)
-  (define model (current-ui-element-model))
-  (define element (current-ui-element))
+  (define model (sr:current-ui-element-model))
+  (define element (sr:current-ui-element))
 
   (define (bind-data)
     (dynamic-send element
@@ -97,16 +81,16 @@
 
 (define (bind-current-ui-element-to-model/body model-getter-id
                                                continuation-func)
-  (define model (current-ui-element-model))
-  (define element (current-ui-element))
-  (define table (current-ui-element-table))
+  (define model (sr:current-ui-element-model))
+  (define element (sr:current-ui-element))
+  (define table (sr:current-ui-element-table))
 
   (define (bind-body)
     (for ([child (send element get-children)])
       (send element delete-child child))
-    (parameterize ([current-ui-element-model model]
-                   [current-ui-element element]
-                   [current-ui-element-table table])
+    (parameterize ([sr:current-ui-element-model model]
+                   [sr:current-ui-element element]
+                   [sr:current-ui-element-table table])
       (continuation-func)))
 
   (send model add-notify-changes-callback
@@ -119,9 +103,9 @@
 
 (define-syntax-rule (zui-create-ui-element class-id ([key value] ...) body-expr ...)
   (let ([ui-instance (new class-id
-                          [parent (current-ui-element)]
+                          [parent (sr:current-ui-element)]
                           [key value] ...)])
-    (parameterize ([current-ui-element ui-instance])
+    (parameterize ([sr:current-ui-element ui-instance])
       (begin0 ui-instance
               body-expr ...))))
 
@@ -178,9 +162,9 @@
      (test-case
       "zui"
       (check-equal? (let ([f (new test-frame%)])
-                      (parameterize ([current-ui-element f]
-                                     [current-ui-element-table (make-hash)]
-                                     [current-ui-element-model (new test-model%)])
+                      (parameterize ([sr:current-ui-element f]
+                                     [sr:current-ui-element-table (make-hash)]
+                                     [sr:current-ui-element-model (new test-model%)])
                         (zui vertical-pane% ([alignment '(center center)])
 
                              (zui message% ([label "UI composition test passed!"]
@@ -204,18 +188,18 @@
 
                              (zui vertical-pane% ([#:bind-body 'get-items]
                                                   [stretchable-height #f])
-                                  (for ([item (send (get-ui-model) get-items)])
+                                  (for ([item (send (sr:get-ui-model) get-items)])
                                     (zui message% ([label (format "BIND-BODY test ~a" item)]
                                                    [font my-font]
                                                    [auto-resize #t]))))
 
                              (void))
                         ; test access by id
-                        (send (get-ui-element "msg") set-label "ID test passed!")
+                        (send (sr:get-ui-element "msg") set-label "ID test passed!")
                         ; test binding in via model
-                        (send (get-ui-model) set-message "BIND-IN test passed!")
+                        (send (sr:get-ui-model) set-message "BIND-IN test passed!")
                         ; test binding body via model
-                        (send (get-ui-model) set-items
+                        (send (sr:get-ui-model) set-items
                               '("Item A passed!"
                                 "Item B passed!")))
                       (send f show #t)
