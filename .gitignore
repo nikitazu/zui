@@ -7,8 +7,3 @@
 
 # Racket compiled sources
 compiled/
-
-# Documentation
-/doc/*
-# but not documentation build script
-!/doc/build.cmd
