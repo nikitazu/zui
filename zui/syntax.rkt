@@ -27,15 +27,15 @@
     ;
     [(zui ([#:model model-expr] kv ...) body-expr ...)
      (zui (kv ...)
-          (parameterize ([sr:current-ui-element-model model-expr])
-            body-expr ...))]
+       (parameterize ([sr:current-ui-element-model model-expr])
+         body-expr ...))]
     ;
     ; #:table keyword argument
     ;
     [(zui ([#:table table-expr] kv ...) body-expr ...)
      (zui (kv ...)
-          (parameterize ([sr:current-ui-element-table table-expr])
-            body-expr ...))]
+       (parameterize ([sr:current-ui-element-table table-expr])
+         body-expr ...))]
     ;
     ; element without body
     ;
@@ -46,35 +46,35 @@
     ;
     [(zui class-id ([#:id id:expr] kv ...) body-expr ...)
      (zui class-id (kv ...)
-          (sr:set-current-ui-element id:expr)
-          body-expr ...)]
+       (sr:set-current-ui-element id:expr)
+       body-expr ...)]
     ;
     ; element with body - #:bind-in keyword argument (with convert)
     ;
     [(zui class-id ([#:bind-in bind-in:expr-from bind-in:expr-to bind-in:convert-func] kv ...) body-expr ...)
      (zui class-id (kv ...)
-          (bind-current-ui-element-to-model/in class-id
-                                               bind-in:expr-from
-                                               bind-in:expr-to
-                                               bind-in:convert-func)
-          body-expr ...)]
+       (bind-current-ui-element-to-model/in class-id
+                                            bind-in:expr-from
+                                            bind-in:expr-to
+                                            bind-in:convert-func)
+       body-expr ...)]
     ;
     ; element with body - #:bind-in keyword argument
     ;
     [(zui class-id ([#:bind-in bind-in:expr-from bind-in:expr-to] kv ...) body-expr ...)
      (zui class-id (kv ...)
-          (bind-current-ui-element-to-model/in class-id
-                                               bind-in:expr-from
-                                               bind-in:expr-to
-                                               values)
-          body-expr ...)]
+       (bind-current-ui-element-to-model/in class-id
+                                            bind-in:expr-from
+                                            bind-in:expr-to
+                                            values)
+       body-expr ...)]
     ;
     ; element with body - #:bind-body keyword argument
     ;
     [(zui class-id ([#:bind-body bind-body:expr] kv ...) body-expr ...)
      (zui class-id (kv ...)
-          (bind-current-ui-element-to-model/body bind-body:expr
-                                                 (λ () body-expr ...)))]
+       (bind-current-ui-element-to-model/body bind-body:expr
+                                              (λ () body-expr ...)))]
     ;
     ; element with body
     ;
