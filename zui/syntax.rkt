@@ -29,72 +29,39 @@
     ;
     [(zui class-id ([#:id id:expr] kv ...) body-expr ...)
      (zui class-id (kv ...)
-          (hash-set! (current-ui-element-table)
-                     id:expr
-                     (current-ui-element))
+          (set-current-ui-element id:expr)
           body-expr ...)]
     ;
     ; with body - #:bind-in keyword argument (with convert)
     ;
     [(zui class-id ([#:bind-in bind-in:expr-from bind-in:expr-to bind-in:convert-func] kv ...) body-expr ...)
      (zui class-id (kv ...)
-          (let ([model (current-ui-element-model)]
-                [element (current-ui-element)])
-            (define (bind-data)
-              (dynamic-send element
-                            bind-in:expr-to
-                            (bind-in:convert-func (dynamic-send model bind-in:expr-from))))
-            (send model add-notify-changes-callback
-                  (λ (prop-names)
-                    (when (memq bind-in:expr-from prop-names)
-                      (bind-data))))
-            (bind-data))
+          (bind-current-ui-element-to-model/in bind-in:expr-from
+                                               bind-in:expr-to
+                                               bind-in:convert-func)
           body-expr ...)]
     ;
     ; with body - #:bind-in keyword argument
     ;
     [(zui class-id ([#:bind-in bind-in:expr-from bind-in:expr-to] kv ...) body-expr ...)
      (zui class-id (kv ...)
-          (let ([model (current-ui-element-model)]
-                [element (current-ui-element)])
-            (define (bind-data)
-              (dynamic-send element
-                            bind-in:expr-to
-                            (dynamic-send model bind-in:expr-from)))
-            (send model add-notify-changes-callback
-                  (λ (prop-names)
-                    (when (memq bind-in:expr-from prop-names)
-                      (bind-data))))
-            (bind-data))
+          (bind-current-ui-element-to-model/in bind-in:expr-from
+                                               bind-in:expr-to
+                                               (λ (x) x))
           body-expr ...)]
     ;
     ; with body - #:bind-body keyword argument
     ;
     [(zui class-id ([#:bind-body bind-body:expr] kv ...) body-expr ...)
      (zui class-id (kv ...)
-          (let ([model (current-ui-element-model)]
-                [element (current-ui-element)]
-                [table (current-ui-element-table)])
-            (define (bind-body)
-              (for ([child (send element get-children)])
-                (send element delete-child child))
-              (parameterize ([current-ui-element-model model]
-                             [current-ui-element element]
-                             [current-ui-element-table table])
-                body-expr ...))
-            (send model add-notify-changes-callback
-                  (λ (prop-names)
-                    (when (memq bind-body:expr prop-names)
-                      (bind-body))))
-            (bind-body)))]
+          (bind-current-ui-element-to-model/body bind-body:expr
+                                                 (λ () body-expr ...)))]
     ;
     ; with body
     ;
     [(zui class-id ([key value] ...) body-expr ...)
-     (let ([ui-instance (new class-id [parent (current-ui-element)] [key value] ...)])
-       (parameterize ([current-ui-element ui-instance])
-         (begin0 ui-instance
-                 body-expr ...)))]))
+     (zui-create-ui-element class-id ([key value] ...) body-expr ...)]))
+
 
 (define (get-ui-element id)
   (hash-ref (current-ui-element-table)
@@ -102,6 +69,62 @@
 
 (define (get-ui-model)
   (current-ui-element-model))
+
+(define (set-current-ui-element id)
+  (hash-set! (current-ui-element-table)
+             id
+             (current-ui-element)))
+
+
+(define (bind-current-ui-element-to-model/in model-getter-id
+                                             element-setter-id
+                                             convert-func)
+  (define model (current-ui-element-model))
+  (define element (current-ui-element))
+
+  (define (bind-data)
+    (dynamic-send element
+                  element-setter-id
+                  (convert-func (dynamic-send model model-getter-id))))
+
+  (send model add-notify-changes-callback
+        (λ (prop-names)
+          (when (memq model-getter-id prop-names)
+            (bind-data))))
+
+  (bind-data))
+
+
+(define (bind-current-ui-element-to-model/body model-getter-id
+                                               continuation-func)
+  (define model (current-ui-element-model))
+  (define element (current-ui-element))
+  (define table (current-ui-element-table))
+
+  (define (bind-body)
+    (for ([child (send element get-children)])
+      (send element delete-child child))
+    (parameterize ([current-ui-element-model model]
+                   [current-ui-element element]
+                   [current-ui-element-table table])
+      (continuation-func)))
+
+  (send model add-notify-changes-callback
+        (λ (prop-names)
+          (when (memq model-getter-id prop-names)
+            (bind-body))))
+
+  (bind-body))
+
+
+(define-syntax-rule (zui-create-ui-element class-id ([key value] ...) body-expr ...)
+  (let ([ui-instance (new class-id
+                          [parent (current-ui-element)]
+                          [key value] ...)])
+    (parameterize ([current-ui-element ui-instance])
+      (begin0 ui-instance
+              body-expr ...))))
+
 
 ;; Tests
 ;;
