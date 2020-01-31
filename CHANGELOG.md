@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - #:model keyword for UI syntax.
 - #:table keyword for UI syntax.
+- #:bind-out keyword for UI syntax.
 - Unit tests.
 
 ### Changed

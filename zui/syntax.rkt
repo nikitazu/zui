@@ -69,6 +69,16 @@
                                             values)
        body-expr ...)]
     ;
+    ; element with body - #:bind-out keyword argument
+    ;
+    [(zui class-id ([#:bind-out bind-out:expr-to] kv ...) body-expr ...)
+     (let ([ui-model (sr:current-ui-element-model)])
+       (zui-create-ui-element class-id
+                              ([callback (λ (s e)
+                                           (dynamic-send ui-model bind-out:expr-to s e))]
+                               kv ...)
+                              body-expr ...))]
+    ;
     ; element with body - #:bind-body keyword argument
     ;
     [(zui class-id ([#:bind-body bind-body:expr] kv ...) body-expr ...)
@@ -180,6 +190,16 @@
         (set! items v)
         (send this notify-changes '(get-items)))
 
+      ; public
+
+      (define/public (increment-count s e)
+        (set! count (add1 count))
+        (send this notify-changes '(get-count)))
+
+      (define/public (decrement-count s e)
+        (set! count (sub1 count))
+        (send this notify-changes '(get-count)))
+
       (void 'test-model)))
 
   (define (number->string/test n)
@@ -211,6 +231,15 @@
 
             (zui test-message% ([#:bind-in 'get-count 'set-label number->string/test]
                                 [label "BIND-IN (convert) test failed!"]))
+
+            (zui horizontal-pane% ([stretchable-height #f]
+                                   [alignment '(center center)])
+
+              (zui button% ([#:bind-out 'increment-count]
+                            [label "Increment count"]))
+
+              (zui button% ([#:bind-out 'decrement-count]
+                            [label "Decrement count"])))
 
             (zui vertical-pane% ([#:bind-body 'get-items]
                                  [stretchable-height #f])
