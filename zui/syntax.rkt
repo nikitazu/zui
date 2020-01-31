@@ -34,6 +34,23 @@
                      (current-ui-element))
           body-expr ...)]
     ;
+    ; with body - #:bind-in keyword argument (with convert)
+    ;
+    [(zui class-id ([#:bind-in bind-in:expr-from bind-in:expr-to bind-in:convert-func] kv ...) body-expr ...)
+     (zui class-id (kv ...)
+          (let ([model (current-ui-element-model)]
+                [element (current-ui-element)])
+            (define (bind-data)
+              (dynamic-send element
+                            bind-in:expr-to
+                            (bind-in:convert-func (dynamic-send model bind-in:expr-from))))
+            (send model add-notify-changes-callback
+                  (λ (prop-names)
+                    (when (memq bind-in:expr-from prop-names)
+                      (bind-data))))
+            (bind-data))
+          body-expr ...)]
+    ;
     ; with body - #:bind-in keyword argument
     ;
     [(zui class-id ([#:bind-in bind-in:expr-from bind-in:expr-to] kv ...) body-expr ...)
@@ -106,6 +123,7 @@
   (define test-model%
     (class (nc:notify-changes-mixin object%)
       (init-field [message "BIND-IN test initialized!"]
+                  [count 666]
                   [items (list "Item 1 failed!"
                                "Item 2 failed!"
                                "Item 3 failed!")])
@@ -118,13 +136,19 @@
         (set! message v)
         (send this notify-changes '(get-message)))
 
+      (define/public (get-count) count)
+
       (define/public (get-items) items)
       (define/public (set-items v)
         (set! items v)
         (send this notify-changes '(get-items)))
 
       (void 'test-model)))
-  
+
+  (define (number->string/test n)
+    (format "BIND-IN (convert) test passed! (~a)"
+            (number->string n)))
+
   (define t
     (test-suite
      "Tests for zui"
@@ -147,6 +171,11 @@
 
                              (zui message% ([#:bind-in 'get-message 'set-label]
                                             [label "BIND-IN test failed!"]
+                                            [font my-font]
+                                            [auto-resize #t]))
+
+                             (zui message% ([#:bind-in 'get-count 'set-label number->string/test]
+                                            [label "BIND-IN (convert) test failed!"]
                                             [font my-font]
                                             [auto-resize #t]))
 
