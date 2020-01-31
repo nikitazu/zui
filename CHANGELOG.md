@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #:table keyword for UI syntax.
 - Unit tests.
 
+### Changed
+
+- Optimized performance for #:bind-in keyword.
+
 ## [0.0.2-alpha] - 2020-01-31
 
 ### Added

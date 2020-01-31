@@ -53,7 +53,8 @@
     ;
     [(zui class-id ([#:bind-in bind-in:expr-from bind-in:expr-to bind-in:convert-func] kv ...) body-expr ...)
      (zui class-id (kv ...)
-          (bind-current-ui-element-to-model/in bind-in:expr-from
+          (bind-current-ui-element-to-model/in class-id
+                                               bind-in:expr-from
                                                bind-in:expr-to
                                                bind-in:convert-func)
           body-expr ...)]
@@ -62,7 +63,8 @@
     ;
     [(zui class-id ([#:bind-in bind-in:expr-from bind-in:expr-to] kv ...) body-expr ...)
      (zui class-id (kv ...)
-          (bind-current-ui-element-to-model/in bind-in:expr-from
+          (bind-current-ui-element-to-model/in class-id
+                                               bind-in:expr-from
                                                bind-in:expr-to
                                                values)
           body-expr ...)]
@@ -80,15 +82,18 @@
      (zui-create-ui-element class-id ([key value] ...) body-expr ...)]))
 
 
-(define (bind-current-ui-element-to-model/in model-getter-id
+(define (bind-current-ui-element-to-model/in class-id
+                                             model-getter-id
                                              element-setter-id
                                              convert-func)
   (define model (sr:current-ui-element-model))
   (define element (sr:current-ui-element))
+  (define element-setter
+    (make-generic class-id element-setter-id))
 
   (define (bind-data)
-    (dynamic-send element
-                  element-setter-id
+    (send-generic element
+                  element-setter
                   (convert-func (dynamic-send model model-getter-id))))
 
   (send model add-notify-changes-callback
