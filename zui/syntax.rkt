@@ -12,6 +12,7 @@
          sr:current-ui-element-table
          sr:current-ui-element-model
          sr:get-ui-element
+         sr:get-ui-element*
          sr:get-ui-model)
 
 (define-syntax zui
