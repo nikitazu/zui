@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - UI syntax macro.
+- #:id keyword for UI syntax.
+- #:bind-in keyword for UI syntax.
+- #:bind-body keyword for UI syntax.
 - View model with changes notification.
 - Documentation: simple example of `zui` macro usage.
 - Build scripts: doc/build.cmd - builds documentation.
