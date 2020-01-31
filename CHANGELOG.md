@@ -7,9 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- #:model keyword for UI syntax.
+- #:table keyword for UI syntax.
+- Unit tests.
+
 ## [0.0.2-alpha] - 2020-01-31
 
 ### Added
+
 - UI syntax macro.
 - #:id keyword for UI syntax.
 - #:bind-in keyword for UI syntax.
@@ -19,11 +26,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Build scripts: doc/build.cmd - builds documentation.
 
 ### Changed
+
 - Nothing.
 
 ### Removed
-- Nothing.
 
+- Nothing.
 
 ## [0.0.1] - 2020-01-13
 

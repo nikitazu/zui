@@ -18,19 +18,38 @@
 (define-syntax zui
   (syntax-rules (zui)
     ;
-    ; without body
+    ; empty
+    ;
+    [(zui () body-expr ...)
+     (begin body-expr ...)]
+    ;
+    ; #:model keyword argument
+    ;
+    [(zui ([#:model model-expr] kv ...) body-expr ...)
+     (zui (kv ...)
+          (parameterize ([sr:current-ui-element-model model-expr])
+            body-expr ...))]
+    ;
+    ; #:table keyword argument
+    ;
+    [(zui ([#:table table-expr] kv ...) body-expr ...)
+     (zui (kv ...)
+          (parameterize ([sr:current-ui-element-table table-expr])
+            body-expr ...))]
+    ;
+    ; element without body
     ;
     [(zui class-id ([key value] ...))
      (zui class-id ([key value] ...) (void))]
     ;
-    ; with body - #:id keyword argument
+    ; element with body - #:id keyword argument
     ;
     [(zui class-id ([#:id id:expr] kv ...) body-expr ...)
      (zui class-id (kv ...)
           (sr:set-current-ui-element id:expr)
           body-expr ...)]
     ;
-    ; with body - #:bind-in keyword argument (with convert)
+    ; element with body - #:bind-in keyword argument (with convert)
     ;
     [(zui class-id ([#:bind-in bind-in:expr-from bind-in:expr-to bind-in:convert-func] kv ...) body-expr ...)
      (zui class-id (kv ...)
@@ -39,7 +58,7 @@
                                                bind-in:convert-func)
           body-expr ...)]
     ;
-    ; with body - #:bind-in keyword argument
+    ; element with body - #:bind-in keyword argument
     ;
     [(zui class-id ([#:bind-in bind-in:expr-from bind-in:expr-to] kv ...) body-expr ...)
      (zui class-id (kv ...)
@@ -48,14 +67,14 @@
                                                values)
           body-expr ...)]
     ;
-    ; with body - #:bind-body keyword argument
+    ; element with body - #:bind-body keyword argument
     ;
     [(zui class-id ([#:bind-body bind-body:expr] kv ...) body-expr ...)
      (zui class-id (kv ...)
           (bind-current-ui-element-to-model/body bind-body:expr
                                                  (λ () body-expr ...)))]
     ;
-    ; with body
+    ; element with body
     ;
     [(zui class-id ([key value] ...) body-expr ...)
      (zui-create-ui-element class-id ([key value] ...) body-expr ...)]))
@@ -121,7 +140,12 @@
 
   (define my-font
     (make-font #:size 20))
-  
+
+  (define test-message%
+    (class message%
+      (super-new [font my-font]
+                 [auto-resize #t])))
+
   (define test-frame%
     (class frame%
       (super-new [label "Test"]
@@ -162,49 +186,53 @@
      "Tests for zui"
      (test-case
       "zui"
-      (check-equal? (let ([f (new test-frame%)])
-                      (parameterize ([sr:current-ui-element f]
-                                     [sr:current-ui-element-table (make-hash)]
-                                     [sr:current-ui-element-model (new test-model%)])
-                        (zui vertical-pane% ([alignment '(center center)])
 
-                             (zui message% ([label "UI composition test passed!"]
-                                            [font my-font]
-                                            [auto-resize #t]))
+      ; UI init
+      (zui ([#:model (new test-model%)]
+            [#:table (make-hash)])
 
-                             (zui message% ([#:id "msg"]
-                                            [label "ID test failed!"]
-                                            [font my-font]
-                                            [auto-resize #t]))
+        ; UI markup
+        (zui test-frame% ([#:id "frame"])
 
-                             (zui message% ([#:bind-in 'get-message 'set-label]
-                                            [label "BIND-IN test failed!"]
-                                            [font my-font]
-                                            [auto-resize #t]))
+          (zui vertical-pane% ([alignment '(center center)])
 
-                             (zui message% ([#:bind-in 'get-count 'set-label number->string/test]
-                                            [label "BIND-IN (convert) test failed!"]
-                                            [font my-font]
-                                            [auto-resize #t]))
+            (zui test-message% ([label "UI composition test passed!"]))
 
-                             (zui vertical-pane% ([#:bind-body 'get-items]
-                                                  [stretchable-height #f])
-                                  (for ([item (send (sr:get-ui-model) get-items)])
-                                    (zui message% ([label (format "BIND-BODY test ~a" item)]
-                                                   [font my-font]
-                                                   [auto-resize #t]))))
+            (zui test-message% ([#:id "msg"]
+                                [label "ID test failed!"]))
 
-                             (void))
-                        ; test access by id
-                        (send (sr:get-ui-element "msg") set-label "ID test passed!")
-                        ; test binding in via model
-                        (send (sr:get-ui-model) set-message "BIND-IN test passed!")
-                        ; test binding body via model
-                        (send (sr:get-ui-model) set-items
-                              '("Item A passed!"
-                                "Item B passed!")))
-                      (send f show #t)
-                      (send f center 'both))
-                    (void)))
+            (zui test-message% ([#:bind-in 'get-message 'set-label]
+                                [label "BIND-IN test failed!"]))
+
+            (zui test-message% ([#:bind-in 'get-count 'set-label number->string/test]
+                                [label "BIND-IN (convert) test failed!"]))
+
+            (zui vertical-pane% ([#:bind-body 'get-items]
+                                 [stretchable-height #f])
+
+              (for ([item (send (sr:get-ui-model) get-items)])
+                (zui test-message% ([label (format "BIND-BODY test ~a" item)]))))
+
+            (void 'vertical-pane))
+
+          ; test access by id
+          (send (sr:get-ui-element "msg") set-label "ID test passed!")
+
+          ; test binding in via model
+          (send (sr:get-ui-model) set-message "BIND-IN test passed!")
+
+          ; test binding body via model
+          (send (sr:get-ui-model) set-items
+                '("Item A passed!"
+                  "Item B passed!"))
+
+          ; show frame
+          (let ([f (sr:get-ui-element "frame")])
+            (send f show #t)
+            (send f center 'both))
+
+          (void 'zui)))
+
+      (check-equal? 0 0))
      (void 't)))
   (run-tests t))
