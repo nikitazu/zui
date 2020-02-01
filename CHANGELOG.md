@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #:table keyword for UI syntax.
 - #:bind-out keyword for UI syntax.
 - Unit tests.
+- Tests for controls.
 
 ### Changed
 
